@@ -1,0 +1,11 @@
+data/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+dbt/shop_dw/target/
+dbt/shop_dw/dbt_packages/
+dbt/shop_dw/logs/
+logs/
+.DS_Store

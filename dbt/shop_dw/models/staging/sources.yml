@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: cdc
+    schema: staging
+    loaded_at_field: _ingested_at
+    freshness:
+      warn_after: {count: 10, period: minute}
+      error_after: {count: 60, period: minute}
+    tables:
+      - name: customers
+      - name: products
+      - name: orders
+      - name: order_items
