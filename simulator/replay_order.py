@@ -82,9 +82,10 @@ def main():
             break
         if write_order(conn, invoice, items):
             sent += 1
+            print(f"sent={sent} order={invoice}")
+            time.sleep(1 / args.rate)
         else:
             skipped += 1
-        time.sleep(1 / args.rate)
 
     conn.close()
     print(f"sent={sent} skipped={skipped}")

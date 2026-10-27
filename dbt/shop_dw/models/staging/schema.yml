@@ -18,3 +18,5 @@ models:
           - relationships:
               to: ref('stg_orders')
               field: order_id
+              config:
+                where: "_ingested_at < now() - interval '15 minutes'"

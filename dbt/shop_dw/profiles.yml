@@ -1,0 +1,12 @@
+shop_dw:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('WH_HOST', 'localhost') }}"
+      port: "{{ env_var('WH_PORT', '5434') | as_number }}"
+      user: "{{ env_var('WH_USER', 'wh') }}"
+      password: "{{ env_var('WH_PASSWORD', 'wh') }}"
+      dbname: warehouse
+      schema: analytics
+      threads: 4

@@ -10,6 +10,7 @@ services:
       - "5433:5432"
     volumes:
       - ./sql/oltp_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - oltp-data:/var/lib/postgresql/data
 
   kafka:
     image: apache/kafka:3.8.0
@@ -50,3 +51,28 @@ services:
       - "5434:5432"
     volumes:
       - ./sql/warehouse_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - warehouse-data:/var/lib/postgresql/data
+  airflow:
+    build: ./airflow
+    command: standalone
+    cpus: "1.5"
+    ports:
+      - "8081:8080"
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      WH_HOST: warehouse-db
+      WH_PORT: "5432"
+      OLTP_DSN: "host=oltp-db port=5432 dbname=shop user=shop password=shop"
+      WH_DSN: "host=warehouse-db port=5432 dbname=warehouse user=wh password=wh"
+      DBT_TARGET_PATH: /tmp/dbt_target
+      DBT_LOG_PATH: /tmp/dbt_logs
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt:/opt/airflow/dbt
+      - ./checks:/opt/airflow/checks
+    depends_on: [oltp-db, warehouse-db]
+
+volumes:
+  oltp-data:
+  warehouse-data:

@@ -1,9 +1,12 @@
 import sys
 import pandas as pd
 import psycopg2
+import argparse
+import os
+import sys
 
-OLTP_DSN = "host=localhost port=5433 dbname=shop user=shop password=shop"
-WH_DSN = "host=localhost port=5434 dbname=warehouse user=wh password=wh"
+OLTP_DSN = os.environ.get("OLTP_DSN", "host=localhost port=5433 dbname=shop user=shop password=shop")
+WH_DSN = os.environ.get("WH_DSN", "host=localhost port=5434 dbname=warehouse user=wh password=wh")
 TOLERANCE = 0.01
 
 SOURCE_SQL = """
@@ -12,6 +15,7 @@ SOURCE_SQL = """
            sum(i.quantity * i.unit_price) AS revenue
     FROM orders o
     JOIN order_items i USING (order_id)
+    WHERE o.updated_at < now() - make_interval(mins => %s)
     GROUP BY o.order_id, o.status
 """
 
@@ -20,20 +24,25 @@ TARGET_SQL = """
            count(*) AS lines,
            sum(revenue) AS revenue
     FROM analytics.fact_sales
+    WHERE order_id = ANY(%s)
     GROUP BY order_id, status
 """
 
-def fetch(dsn, query):
+def fetch(dsn, query, params=None):
     with psycopg2.connect(dsn) as conn, conn.cursor() as cur:
-        cur.execute(query)
+        cur.execute(query, params)
         cols = [d[0] for d in cur.description]
         df = pd.DataFrame(cur.fetchall(), columns=cols)
     df["revenue"] = df["revenue"].astype(float)
     return df
 
 def main():
-    src = fetch(OLTP_DSN, SOURCE_SQL)
-    tgt = fetch(WH_DSN, TARGET_SQL)
+    p = argparse.ArgumentParser()
+    p.add_argument("--lag-minutes", type=int, default=0)
+    args = p.parse_args()
+
+    src = fetch(OLTP_DSN, SOURCE_SQL, (args.lag_minutes,))
+    tgt = fetch(WH_DSN, TARGET_SQL, (src["order_id"].tolist(),))
 
     m = src.merge(tgt, on="order_id", how="outer",
                   suffixes=("_src", "_tgt"), indicator=True)

@@ -10,13 +10,19 @@ models:
           - relationships:
               to: ref('dim_customer')
               field: customer_id
+              config:
+                where: "_ingested_at < now() - interval '15 minutes'"
       - name: stock_code
         tests:
           - relationships:
               to: ref('dim_product')
               field: stock_code
+              config:
+                where: "_ingested_at < now() - interval '15 minutes'"
       - name: date_key
         tests:
           - relationships:
               to: ref('dim_date')
               field: date_key
+              config:
+                where: "_ingested_at < now() - interval '15 minutes'"

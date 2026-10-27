@@ -9,6 +9,7 @@ select
     o.status,
     i.quantity,
     i.unit_price,
-    i.quantity * i.unit_price                as revenue
+    i.quantity * i.unit_price                as revenue,
+    i._ingested_at
 from {{ ref('stg_order_items') }} i
 join {{ ref('stg_orders') }} o using (order_id)

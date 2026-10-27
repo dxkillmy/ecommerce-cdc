@@ -1,8 +1,8 @@
 import json
-
+import time
 import psycopg2
 from psycopg2 import sql
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, KafkaError, KafkaException
 
 WAREHOUSE_DSN = "host=localhost port=5434 dbname=warehouse user=wh password=wh"
 
@@ -50,6 +50,28 @@ def apply_event(cur, table, pk_cols, event):
     )
     cur.execute(query, [row[c] for c in cols] + [lsn])
 
+RETRIABLE = {
+    KafkaError.NOT_COORDINATOR,
+    KafkaError.COORDINATOR_NOT_AVAILABLE,
+    KafkaError.COORDINATOR_LOAD_IN_PROGRESS,
+    KafkaError.REQUEST_TIMED_OUT,
+}
+
+
+def commit_with_retry(consumer, attempts=5):
+    for i in range(attempts):
+        try:
+            consumer.commit(asynchronous=False)
+            return
+        except KafkaException as e:
+            err = e.args[0]
+            retriable = err.retriable() or err.code() in RETRIABLE
+            if not retriable or i == attempts - 1:
+                raise
+            wait = 2 ** i
+            print(f"commit failed ({err.str()}), retry in {wait}s")
+            time.sleep(wait)
+
 def main():
     consumer = Consumer({
         "bootstrap.servers": "localhost:29092",
@@ -63,23 +85,24 @@ def main():
 
     try:
         while True:
-            msg = consumer.poll(1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                print("kafka error:", msg.error())
+            msgs = consumer.consume(num_messages=500, timeout=1.0)
+            if not msgs:
                 continue
 
-            if msg.value() is not None:
-                event = json.loads(msg.value())
-                table, pk_cols = TOPICS[msg.topic()]
-                with conn, conn.cursor() as cur:
+            with conn, conn.cursor() as cur:
+                for msg in msgs:
+                    if msg.error():
+                        print("kafka error:", msg.error())
+                        continue
+                    if msg.value() is None:
+                        continue
+                    event = json.loads(msg.value())
+                    table, pk_cols = TOPICS[msg.topic()]
                     apply_event(cur, table, pk_cols, event)
 
-            consumer.commit(message=msg, asynchronous=False)
-            processed += 1
-            if processed % 500 == 0:
-                print(f"processed={processed}")
+            commit_with_retry(consumer)
+            processed += len(msgs)
+            print(f"processed={processed} (batch={len(msgs)})")
     except KeyboardInterrupt:
         pass
     finally:
