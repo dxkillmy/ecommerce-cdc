@@ -1,9 +1,11 @@
 import os
+import logging
 from datetime import datetime, timedelta
-
 import requests
 from airflow.sdk import dag
 from airflow.providers.standard.operators.bash import BashOperator
+
+log = logging.getLogger(__name__)
 
 DBT = "/home/airflow/dbt_venv/bin/dbt"
 DBT_DIR = "/opt/airflow/dbt/shop_dw"
@@ -12,10 +14,12 @@ DBT_DIR = "/opt/airflow/dbt/shop_dw"
 def notify_discord(context):
     url = os.environ.get("DISCORD_WEBHOOK_URL")
     if not url:
+        log.warning("DISCORD_WEBHOOK_URL is not set, skipping alert")
         return
     ti = context["task_instance"]
     msg = f"`{ti.dag_id}.{ti.task_id}` failed (run `{context['run_id']}`)"
-    requests.post(url, json={"content": msg}, timeout=10)
+    resp = requests.post(url, json={"content": msg}, timeout=10)
+    resp.raise_for_status()
 
 
 default_args = {
