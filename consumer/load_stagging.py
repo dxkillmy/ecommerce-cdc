@@ -65,10 +65,13 @@ def commit_with_retry(consumer, attempts=5):
             return
         except KafkaException as e:
             err = e.args[0]
+            if err.code() == KafkaError._ASSIGNMENT_LOST:
+                print("assignment lost; batch will be re-consumed after rejoin")
+                return
             retriable = err.retriable() or err.code() in RETRIABLE
-            if not retriable or i == attempts - 1:
+            if not retriable:
                 raise
-            wait = 2 ** i
+            wait = 2**i
             print(f"commit failed ({err.str()}), retry in {wait}s")
             time.sleep(wait)
 
