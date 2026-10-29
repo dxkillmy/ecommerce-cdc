@@ -96,6 +96,19 @@ services:
       - ./checks:/opt/airflow/checks
     depends_on: [oltp-db, warehouse-db]
 
+  consumer:
+    build: ./consumer
+    restart: unless-stopped
+    environment:
+      KAFKA_BOOTSTRAP: kafka:9092
+      WH_DSN: "host=warehouse-db port=5432 dbname=warehouse user=wh password=wh"
+      PYTHONUNBUFFERED: "1"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      warehouse-db:
+        condition: service_started
+
 volumes:
   oltp-data:
   warehouse-data:

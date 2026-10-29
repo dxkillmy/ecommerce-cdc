@@ -1,10 +1,12 @@
 import json
 import time
+import os
 import psycopg2
 from psycopg2 import sql
 from confluent_kafka import Consumer, KafkaError, KafkaException
 
-WAREHOUSE_DSN = "host=localhost port=5434 dbname=warehouse user=wh password=wh"
+WAREHOUSE_DSN = os.environ.get("WH_DSN", "host=localhost port=5434 dbname=warehouse user=wh password=wh")
+KAFKA_BOOTSTRAP = os.environ.get("KAFKA_BOOTSTRAP", "localhost:29092")
 
 TOPICS = {
     "shop.public.customers":   ("customers",   ["customer_id"]),
@@ -57,7 +59,6 @@ RETRIABLE = {
     KafkaError.REQUEST_TIMED_OUT,
 }
 
-
 def commit_with_retry(consumer, attempts=5):
     for i in range(attempts):
         try:
@@ -74,10 +75,11 @@ def commit_with_retry(consumer, attempts=5):
             wait = 2**i
             print(f"commit failed ({err.str()}), retry in {wait}s")
             time.sleep(wait)
+    raise RuntimeError(f"Failed to commit Kafka offset after {attempts} attempts")
 
 def main():
     consumer = Consumer({
-        "bootstrap.servers": "localhost:29092",
+        "bootstrap.servers": KAFKA_BOOTSTRAP,
         "group.id": "warehouse-loader",
         "auto.offset.reset": "earliest",
         "enable.auto.commit": False,
