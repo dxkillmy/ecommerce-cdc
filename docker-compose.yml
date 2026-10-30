@@ -103,6 +103,7 @@ services:
       KAFKA_BOOTSTRAP: kafka:9092
       WH_DSN: "host=warehouse-db port=5432 dbname=warehouse user=wh password=wh"
       PYTHONUNBUFFERED: "1"
+      BATCH_SIZE: ${BATCH_SIZE:-500}
     depends_on:
       kafka:
         condition: service_healthy

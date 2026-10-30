@@ -6,6 +6,7 @@ CREATE TABLE staging.customers (
     created_at    TIMESTAMPTZ,
     _deleted      BOOLEAN NOT NULL DEFAULT false,
     _source_lsn   BIGINT NOT NULL,
+    _source_ts TIMESTAMPTZ,
     _ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -16,6 +17,7 @@ CREATE TABLE staging.products (
     updated_at    TIMESTAMPTZ,
     _deleted      BOOLEAN NOT NULL DEFAULT false,
     _source_lsn   BIGINT NOT NULL,
+    _source_ts TIMESTAMPTZ,
     _ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -27,6 +29,7 @@ CREATE TABLE staging.orders (
     updated_at    TIMESTAMPTZ,
     _deleted      BOOLEAN NOT NULL DEFAULT false,
     _source_lsn   BIGINT NOT NULL,
+    _source_ts TIMESTAMPTZ,
     _ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -38,6 +41,7 @@ CREATE TABLE staging.order_items (
     unit_price    NUMERIC(10,2),
     _deleted      BOOLEAN NOT NULL DEFAULT false,
     _source_lsn   BIGINT NOT NULL,
+    _source_ts TIMESTAMPTZ,
     _ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (order_id, line_no)
 );
