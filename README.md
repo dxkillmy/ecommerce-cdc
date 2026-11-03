@@ -26,7 +26,7 @@ docker compose up -d --wait oltp-db warehouse-db kafka connect consumer
 curl -X POST -H "Content-Type: application/json" \
   --data @connectors/shop-connector.json localhost:8083/connectors
 
-python simulator/replay_order.py --limit 500 --rate 5
+python simulator/replay_order.py --limit 1000000 --rate 1000
 
 cd dbt/shop_dw && dbt run --profiles-dir . && dbt test --profiles-dir . && cd ../..
 python checks/reconcile.py
@@ -47,6 +47,8 @@ http://localhost:8081.
 
 ## Results
 
+- **Full dataset:** I replayed all 36,969 orders (779,425 order lines) in
+about 7 minutes. Reconcile matched every order.
 - **Latency:** p50 about 1 s, p95 about 1.7 s from the shop DB commit to the warehouse (500 orders, 5 orders per second).
 - **Throughput:** about 1,200 events/s with batch size 1, about 5,000 with batch size 500 (replaying ~179k events).
 - **Data checks:** 11 dbt tests, source freshness, and an order-by-order reconciliation against the shop DB. I also compared it with my batch warehouse from the previous project: 2,050 orders matched to the cent.
