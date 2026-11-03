@@ -2,5 +2,5 @@ FROM python:3.11-slim
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY load_stagging.py .
-CMD ["python", "load_stagging.py"]
+COPY load_staging.py .
+CMD ["python", "load_staging.py"]

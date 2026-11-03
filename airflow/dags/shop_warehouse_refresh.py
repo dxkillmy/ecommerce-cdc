@@ -31,7 +31,7 @@ default_args = {
 
 @dag(
     dag_id="shop_warehouse_refresh",
-    schedule="*/10 * * * *",
+    schedule="*/30 * * * *",
     start_date=datetime(2026, 10, 1),
     catchup=False,
     max_active_runs=1,

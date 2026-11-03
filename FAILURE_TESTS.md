@@ -28,7 +28,7 @@ I ran the simulator to write 500 new orders and ran
 
 Expected: Debezium can't send anything while Kafka is down, but Postgres keeps the changes in the WAL because of the replication slot. When Kafka comes back, Debezium should continue from where it stopped.
 
-What happened: the simulator didn't notice anything because it only writes to Postgres. The consumer printed connection errors and then carried on by itself. (check: did the Debezium task stay RUNNING?)
+What happened: the simulator didn't notice anything because it only writes to Postgres. The consumer printed connection errors and then carried on by itself. 
 
 Result: passed. orders 4,000 and order_items 82,941 on both sides.
 Reconcile passed.
@@ -38,7 +38,7 @@ Reconcile passed.
 I ran the simulator again (500 more orders) and ran
 `docker compose restart warehouse-db` in the middle.
 
-Expected: the consumer crashes because its database connection is gone, but nothing is lost. The batch it was writing gets rolled back by Postgres, and its offsets were never committed, so the batch is read again after arestart.
+Expected: the consumer crashes because its database connection is gone, but nothing is lost. The batch it was writing gets rolled back by Postgres, and its offsets were never committed, so the batch is read again after a restart.
 
 What happened: the consumer crashed with
 `OperationalError: server closed the connection unexpectedly`, then

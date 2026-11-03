@@ -45,6 +45,3 @@ CREATE TABLE staging.order_items (
     _ingested_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     PRIMARY KEY (order_id, line_no)
 );
-
-SELECT order_id, status, _source_lsn FROM staging.orders 
-WHERE status = 'cancelled';

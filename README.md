@@ -48,9 +48,8 @@ http://localhost:8081.
 ## Results
 
 - **Latency:** p50 about 1 s, p95 about 1.7 s from the shop DB commit to the warehouse (500 orders, 5 orders per second).
-- **Throughput:** about 1,200 events/s with batch size 1, 
-about 5,000 with batch size 500 (replaying ~179k events).
-- **Data checks:** 11 dbt tests, source freshness, and an       order-by-order reconciliation against the shop DB. I also compared it with my batch warehouse from the previous project: 2,050 orders matched to the cent.
+- **Throughput:** about 1,200 events/s with batch size 1, about 5,000 with batch size 500 (replaying ~179k events).
+- **Data checks:** 11 dbt tests, source freshness, and an order-by-order reconciliation against the shop DB. I also compared it with my batch warehouse from the previous project: 2,050 orders matched to the cent.
 - **Failure tests:** I killed the consumer, restarted Kafka, the warehouse DB and Debezium while orders were coming in. Nothing was lost or duplicated.
 See [FAILURE_TESTS.md](FAILURE_TESTS.md).
 

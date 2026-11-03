@@ -9,3 +9,4 @@ dbt/shop_dw/dbt_packages/
 dbt/shop_dw/logs/
 logs/
 .DS_Store
+.user.yml
